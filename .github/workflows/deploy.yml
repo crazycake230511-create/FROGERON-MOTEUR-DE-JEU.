@@ -1,0 +1,46 @@
+name: Build et publier FROGERON
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Importer les ressources Godot
+        run: godot --headless --import
+      - name: Exporter le projet pour le web
+        run: godot --headless --verbose --export-release "Web"
+      - name: Assembler le site
+        run: |
+          mkdir -p _site/game
+          cp -r build/web/. _site/game/
+          [ -d editor ] && mkdir -p _site/editor && cp -r editor/. _site/editor/ || true
+          [ -f site/index.html ] && cp site/index.html _site/index.html || true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
