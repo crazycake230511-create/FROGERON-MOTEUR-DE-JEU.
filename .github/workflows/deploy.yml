@@ -29,10 +29,12 @@ jobs:
           if [ -z "$SRC" ]; then echo "ERREUR : templates introuvables dans l'image"; exit 1; fi
           mkdir -p /github/home/.local/share/godot/export_templates
           ln -sfn "$SRC" /github/home/.local/share/godot/export_templates/4.3.stable
-          ls /github/home/.local/share/godot/export_templates/4.3.stable | grep web
 
       - name: Importer les ressources Godot
         run: godot --headless --import
+
+      - name: Préparer le dossier de sortie
+        run: mkdir -p build/web
 
       - name: Exporter le projet pour le web
         run: godot --headless --verbose --export-release "Web"
